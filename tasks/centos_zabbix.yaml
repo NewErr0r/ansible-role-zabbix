@@ -1,1 +1,144 @@
 ---
+- name: Configure firewalld
+  firewalld: 
+    port: "{{ item }}"
+    permanent: yes 
+    state: enabled
+  loop: 
+    - 80/tcp
+    - 443/tcp
+    - 10051/tcp
+    - 10050/tcp
+    - 10051/udp
+    - 10050/udp
+  notify:
+    - Restart firewalld
+
+- name: Disable SELinux 
+  ansible.posix.selinux:
+    state: disabled
+
+- name: Disable SELinux now
+  command: 
+    cmd: setenforce 0 
+  when: 
+    - ansible_selinux.status == "enabled"
+
+- name: Settings MariaDB | Install Mariadb 
+  dnf: 
+    name: 
+      - mariadb-server
+      - python3-PyMySQL
+    state: latest
+
+- name: Settings MariaDB | Start and Enable MariaDB
+  service: 
+    name: mariadb 
+    state: started 
+    enabled: true
+
+- name: Settings MariaDB | Configure 'root' password for MariaDB
+  command: 
+    cmd: mysqladmin -u root password {{ mariadb_root_pass }}
+
+#- name: Settings MariaDB | Configure 'root' password for MariaDB
+#  mysql_user:
+#    check_implicit_admin: true
+#    login_user: root 
+#    login_password: "{{ mariadb_root_pass }}"
+#    user: root 
+#    password: "{{ mariadb_root_pass }}"
+#    host: localhost
+
+- name: Settings MariaDB | Create DB for Zabbix
+  community.mysql.mysql_db:
+    name: "{{ db_name }}"
+    encoding: utf8
+    collation: utf8_bin
+    login_user: root
+    login_password: "{{ mariadb_root_pass }}"
+  failed_when: false 
+
+- name: Settings MariaDB | Create User DB for Zabbix
+  community.mysql.mysql_user:
+    name: "{{ db_user_name }}"
+    password: "{{ db_user_pass }}"
+    priv: '*.*:ALL,GRANT'
+    host: '%'
+    state: present
+    login_user: root
+    login_password: "{{ mariadb_root_pass }}"
+
+- name: Install NGINX and PHP-FPM
+  dnf: 
+    name: 
+      - nginx 
+      - php
+      - php-fpm 
+      - php-mysqli 
+    state: latest 
+  notify: 
+    - Start and Enable nginx and php-fpm
+
+- name: Configure file 'php.ini'
+  ansible.builtin.lineinfile:
+    path: /etc/php.ini
+    regexp: '{{ item.regexp }}'
+    line: '{{ item.line }}'
+  loop: 
+    - { regexp: ^;date.timezone = , line: date.timezone = "Europe/Moscow" }
+    - { regexp: ^max_execution_time = 30 , line: max_execution_time = 300 }
+    - { regexp: ^max_input_time = 60 , line: max_input_time = 300 }
+    - { regexp: ^post_max_size = 8M , line: post_max_size = 16M }
+
+- name: Download zabbix | Install repo for Zabbix
+  dnf: 
+    name: "{{ repo_zabbix }}"
+    state: present
+
+- name: Download zabbix | Install packages for Zabbix
+  dnf: 
+    name: "{{ packages_zabbix }}"
+    state: latest 
+
+- name: Settings MariaDB | Copy "create.sql" file 
+  copy:
+    src: create.sql 
+    dest: "{{ path_for_create_sql }}"
+
+- name: Settings MariaDB | Importing a ready-made Zabbix database
+  community.mysql.mysql_db:
+    name: "{{ db_name }}"
+    encoding: utf8
+    collation: utf8_bin
+    target: "{{ path_for_create_sql }}"
+    state: import
+    login_user: root
+    login_password: "{{ mariadb_root_pass }}"
+  failed_when: false 
+
+- name: Configure file 'zabbix_server.conf'
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: ^# DBPassword=
+    line: DBPassword={{ db_user_pass }}
+
+- name: Setting the owner for the /etc/zabbix/web
+  file: 
+    path: /etc/zabbix/web
+    owner: apache
+    group: apache
+  notify: 
+    - Start and enable zabbix-server
+
+- name: Configure NGINX for Web-Zabbix
+  template:
+    src: nginx.conf.j2
+    dest: "{{ path_nginx_conf }}"
+  notify: 
+    - Restart NGINX
+
+- name: Install Russian Language
+  dnf: 
+    name: glibc-langpack-ru
+    state: latest 
