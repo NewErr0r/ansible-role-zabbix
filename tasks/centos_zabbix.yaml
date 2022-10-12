@@ -37,18 +37,18 @@
     state: started 
     enabled: true
 
-- name: Settings MariaDB | Configure 'root' password for MariaDB
-  command: 
-    cmd: mysqladmin -u root password {{ mariadb_root_pass }}
-
 #- name: Settings MariaDB | Configure 'root' password for MariaDB
-#  mysql_user:
-#    check_implicit_admin: true
-#    login_user: root 
-#    login_password: "{{ mariadb_root_pass }}"
-#    user: root 
-#    password: "{{ mariadb_root_pass }}"
-#    host: localhost
+#  command: 
+#    cmd: mysqladmin -u root password {{ mariadb_root_pass }}
+
+- name: Settings MariaDB | Configure 'root' password for MariaDB
+  mysql_user:
+    check_implicit_admin: true
+    login_user: root 
+    login_password: "{{ mariadb_root_pass }}"
+    user: root 
+    password: "{{ mariadb_root_pass }}"
+    host: localhost
 
 - name: Settings MariaDB | Create DB for Zabbix
   community.mysql.mysql_db:
@@ -142,3 +142,14 @@
   dnf: 
     name: glibc-langpack-ru
     state: latest 
+
+- debug:
+    msg:
+      - Open the browser 'http://{{ ansible_ssh_host }}' 
+      - "#######################################################"
+      - "### Password user database --->  {{ db_user_pass }} ###"
+      - "#######################################################"
+      - "### Authentication default on platform:   #############"
+      - "### login: Admin                          #############"
+      - "### password: zabbix                      #############"
+      - "#######################################################"
