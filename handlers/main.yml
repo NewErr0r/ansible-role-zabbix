@@ -1,0 +1,31 @@
+---
+- name: Restart firewalld
+  service: 
+    name: firewalld 
+    state: restarted
+
+- name: Start and Enable nginx and php-fpm
+  service: 
+    name: "{{ item }}"
+    state: started 
+    enabled: true
+  loop: 
+    - nginx 
+    - php-fpm
+
+- name: Start and enable zabbix-server
+  service: 
+    name: zabbix-server
+    state: started 
+    enabled: true
+
+- name: Restart NGINX
+  service: 
+    name: nginx 
+    state: restarted
+
+
+
+
+
+    
