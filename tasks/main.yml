@@ -1,0 +1,10 @@
+---
+- name: Deploy Zabbix server on CentOS 
+  include_tasks: centos_zabbix.yaml
+  when:
+    - ansible_os_family == 'RedHat'
+
+- name: Deploy Zabbix server on Debian 
+  include_tasks: debian_zabbix.yaml
+  when:
+    - ansible_os_family == 'Debian'
