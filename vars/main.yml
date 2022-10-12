@@ -1,0 +1,8 @@
+---
+packages_zabbix: 
+  - zabbix-server-mysql 
+  - zabbix-web-mysql 
+  - zabbix-agent 
+  - zabbix-get
+
+path_for_create_sql: /usr/share/doc/zabbix-server-mysql/create.sql
