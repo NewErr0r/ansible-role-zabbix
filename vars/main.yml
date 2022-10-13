@@ -1,4 +1,5 @@
 ---
+# for CentOS
 packages_zabbix: 
   - zabbix-server-mysql 
   - zabbix-web-mysql 
@@ -6,3 +7,13 @@ packages_zabbix:
   - zabbix-get
 
 path_for_create_sql: /usr/share/doc/zabbix-server-mysql/create.sql
+
+# for Debian
+zabbix_packages:
+  - zabbix-server-mysql 
+  - zabbix-frontend-php 
+  - zabbix-nginx-conf 
+  - zabbix-sql-scripts 
+  - zabbix-agent 
+  - mariadb-server
+  - python3-pymysql
