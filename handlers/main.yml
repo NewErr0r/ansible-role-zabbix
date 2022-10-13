@@ -24,8 +24,15 @@
     name: nginx 
     state: restarted
 
-
-
-
+- name: Start and enable services zabbix
+  service: 
+    name: "{{ item }}"
+    state: started 
+    enabled: true 
+  loop: 
+    - zabbix-server
+    - zabbix-agent
+    - nginx
+    - php7.4-fpm
 
     
