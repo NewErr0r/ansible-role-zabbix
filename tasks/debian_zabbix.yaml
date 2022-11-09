@@ -35,7 +35,8 @@
     state: started 
 
 - name: Settings MariaDB | Configure root password for MariaDB 
-  command: mysqladmin -u root password {{ mariadb_root_pass }}
+  command: 
+    cmd: mysqladmin -u root password {{ mariadb_root_pass }}
 
 - name: Settings MariaDB | Create DB for Zabbix
   community.mysql.mysql_db:
