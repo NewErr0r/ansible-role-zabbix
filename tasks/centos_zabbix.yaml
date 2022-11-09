@@ -37,9 +37,6 @@
     state: started 
     enabled: true
 
-
-#    cmd: mysqladmin -u root password {{ mariadb_root_pass }}
-
 - name: Settings MariaDB | Configure 'root' password for MariaDB
   mysql_user:
     check_implicit_admin: true
